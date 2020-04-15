@@ -12,6 +12,12 @@ credentials = {}
 
 class mail_composer:
     _sender_email_id = 'correspondent.automated@gmail.com'
+    _sender_signature = '''
+    
+    --
+    I am a digital reporter built by Aditya Modi to provide status updates for background experiments, etc.
+    My source code is freely available on GitHub: https://github.com/AdiModi96/Mail-Companion
+    '''
 
     def __init__(self):
         self._sender_email_id = None
@@ -70,7 +76,8 @@ class mail_composer:
             .replace(']', '') \
             .replace('\'', '') \
             .replace('"', '')
-        self._mime_message.attach(MIMEText(self._message_body, 'html' if self._html else 'plain'))
+        self._mime_message.attach(MIMEText(self._message_body + mail_composer._sender_signature,
+                                           'html' if self._html else 'plain'))
 
         self._all_receiver_email_ids = [self._receiver_email_id]
         for _receiver_email_cc_id in self._receiver_email_cc_ids:
@@ -105,7 +112,8 @@ class mailer:
 
         try:
             for i in range(3):
-                password = getpass.getpass(prompt='Enter your password for account "{}": '.format(mail_composer._sender_email_id))
+                password = getpass.getpass(
+                    prompt='Enter your password for account "{}": '.format(mail_composer._sender_email_id))
                 try:
                     with smtplib.SMTP_SSL("smtp.gmail.com", context=self.context) as server:
                         server.login(mail_composer._sender_email_id, password)
@@ -134,4 +142,3 @@ class mailer:
                 print('Error: Unexpected Error!')
         else:
             print('Error: Compose a mail first!')
-
