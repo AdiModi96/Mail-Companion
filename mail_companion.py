@@ -16,7 +16,7 @@ class mail_composer:
     
     --
     I am a digital reporter built by Aditya Modi to provide status updates for background experiments, etc.
-    My source code is freely available on GitHub: https://github.com/AdiModi96/Mail-Companion
+    My source code is freely available on GitHub: https://github.com/AdiModi96/Mail-Companion
     '''
 
     def __init__(self):
@@ -111,7 +111,7 @@ class mailer:
         self.context = ssl.create_default_context()
 
         try:
-            for i in range(3):
+            for i in range(3, 0, -1):
                 password = getpass.getpass(
                     prompt='Enter your password for account "{}": '.format(mail_composer._sender_email_id))
                 try:
