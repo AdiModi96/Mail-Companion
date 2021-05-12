@@ -5,17 +5,12 @@ from email.mime.base import MIMEBase
 import smtplib
 from email import encoders
 import ssl
-import getpass
 
-credentials = {}
-
-
-class mail_composer:
-    _sender_email_id = 'correspondent.automated@gmail.com'
+class MailComposer:
     _sender_signature = '''
     
-    --
-    I am a digital reporter built by Aditya Modi to provide status updates for background experiments, etc.
+    ═════════════════════════════════════════════════
+    I am a digital reporter built by Aditya Modi as a notification service to provide updates for experiments, results, events, etc.
     My source code is freely available on GitHub: https://github.com/AdiModi96/Mail-Companion
     '''
 
@@ -25,10 +20,13 @@ class mail_composer:
         self._receiver_email_cc_ids = []
         self._receiver_email_bcc_ids = []
         self._subject = ''
-        self._message_body = ''''''
+        self._message_body = ''
         self._html = False
         self._mime_message = None
         self._attachments_file_paths = []
+
+    def set_sender_email_id(self, sender_email_id):
+        self._sender_email_id = sender_email_id
 
     def set_receiver_email_id(self, receiver_email_id):
         self._receiver_email_id = receiver_email_id
@@ -57,26 +55,18 @@ class mail_composer:
     def set_subject(self, subject):
         self._subject = subject
 
-    def set_message_body(self, message_body='''''', html=False):
+    def set_message_body(self, message_body='', html=False):
         self._message_body = message_body
         self._html = html
 
     def compose_message(self):
         self._mime_message = MIMEMultipart('alternative')
         self._mime_message['Subject'] = self._subject
-        self._mime_message['From'] = mail_composer._sender_email_id
+        self._mime_message['From'] = self._sender_email_id
         self._mime_message['To'] = self._receiver_email_id
-        self._mime_message['Cc'] = str(self._receiver_email_cc_ids) \
-            .replace('[', '') \
-            .replace(']', '') \
-            .replace('\'', '') \
-            .replace('"', '')
-        self._mime_message['Bcc'] = str(self._receiver_email_bcc_ids) \
-            .replace('[', '') \
-            .replace(']', '') \
-            .replace('\'', '') \
-            .replace('"', '')
-        self._mime_message.attach(MIMEText(self._message_body + mail_composer._sender_signature,
+        self._mime_message['Cc'] = ','.join(self._receiver_email_cc_ids)
+        self._mime_message['Bcc'] = ','.join(self._receiver_email_bcc_ids)
+        self._mime_message.attach(MIMEText(self._message_body + self._sender_signature,
                                            'html' if self._html else 'plain'))
 
         self._all_receiver_email_ids = [self._receiver_email_id]
@@ -100,45 +90,21 @@ class mail_composer:
                 "attachment; filename={}".format(file_name),
             )
             self._mime_message.attach(part)
-        print('Mail composed successfully!')
 
 
-class mailer:
+class Mailer:
 
-    def __init__(self):
-        self._mail_composer = None
-        self._password = ''
-        self.context = ssl.create_default_context()
+    def __init__(self, sender_email_id, password):
+        self._sender_email_id = sender_email_id
+        self._password = password
+        self._context = ssl.create_default_context()
 
-        try:
-            for i in range(3, 0, -1):
-                password = getpass.getpass(
-                    prompt='Enter your password for account "{}": '.format(mail_composer._sender_email_id))
-                try:
-                    with smtplib.SMTP_SSL("smtp.gmail.com", context=self.context) as server:
-                        server.login(mail_composer._sender_email_id, password)
-                        self._password = password
-                        break
-                except smtplib.SMTPAuthenticationError:
-                    print('Error: Authentication Failed!')
-                    print('{} attempts left'.format(i - 1))
+        with smtplib.SMTP_SSL("smtp.gmail.com", context=self._context) as server:
+            server.login(self._sender_email_id, self._password)
 
-        except:
-            print('Error: Unexpected Error!')
-
-    def set_mail_composer(self, mail_composer):
-        self._mail_composer = mail_composer
-
-    def send(self):
-        if mail_composer != None:
-            try:
-                with smtplib.SMTP_SSL("smtp.gmail.com", context=self.context) as server:
-                    server.login(mail_composer._sender_email_id, self._password)
-                    server.sendmail(mail_composer._sender_email_id,
-                                    self._mail_composer._all_receiver_email_ids,
-                                    self._mail_composer._mime_message.as_string())
-                print('Mail sent successfully!')
-            except:
-                print('Error: Unexpected Error!')
-        else:
-            print('Error: Compose a mail first!')
+    def send(self, mail_composer=None):
+        with smtplib.SMTP_SSL("smtp.gmail.com", context=self._context) as server:
+            server.login(self._sender_email_id, self._password)
+            server.sendmail(mail_composer._sender_email_id,
+                            mail_composer._all_receiver_email_ids,
+                            mail_composer._mime_message.as_string())
